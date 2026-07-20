@@ -1,0 +1,80 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+#joblib is the library that saves and loads models.
+import joblib
+
+df = pd.read_csv("archive.zip")
+print(df.head())
+print(df.shape)
+
+#Removes any extra spaces from the beginning or end of the column names
+df.columns = df.columns.str.strip()
+#Prints all the column names as a list
+print(df.columns.tolist())
+#Removes any rows that contain missing values
+df = df.dropna()
+
+X = df[['study_hours',
+        'attendance',
+        'sleep_hours',
+        'internet_usage',
+        'assignments_completed',
+        'previous_score']]
+
+y = df["placement_status"]
+
+print(X.head())
+print(y.head())
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=2,
+    random_state=42,
+    max_features='sqrt'
+)
+
+model.fit(X_train, y_train)
+
+prediction = model.predict(X_test)
+
+print("prediction")
+print(prediction)
+
+print("Actual values")
+print(y_test.values)
+
+print("Accuracy:", accuracy_score(y_test, prediction))
+print("Precision:", precision_score(y_test, prediction, pos_label="Placed"))
+print("Recall:", recall_score(y_test, prediction, pos_label="Placed"))
+print("F1 Score:", f1_score(y_test, prediction, pos_label="Placed"))
+
+#.pkl is the file that you ca use so you dont need to retrain model
+#saves your trained model into a .pkl file
+joblib.dump(model, 'RF.pkl')
+
+#Creates a new student data entry in the same format as the training data
+# Loads the pkl file
+# Uses the model to predict the student's placement status
+# Prints the prediction (Placed or Not Placed)
+new_data = pd.DataFrame(
+    [[5, 90, 7, 3, 10, 85]],
+    columns=['study_hours',
+             'attendance',
+             'sleep_hours',
+             'internet_usage',
+             'assignments_completed',
+             'previous_score']
+)
+
+loaded_model = joblib.load('RF.pkl')
+
+new_prediction = loaded_model.predict(new_data)
+
+#prints prediction for first student, because predict() gives a list
+print(new_prediction[0])
